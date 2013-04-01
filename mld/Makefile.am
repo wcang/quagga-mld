@@ -7,7 +7,7 @@ AM_CFLAGS = $(PICFLAGS)
 AM_LDFLAGS = $(PILDFLAGS)
 
 sbin_PROGRAMS = mld
-
+noinst_HEADERS = mld.h
 mld_SOURCES = mld.c
 
 mld_LDADD = ../lib/libzebra.la @LIBCAP@ 
