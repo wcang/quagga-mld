@@ -41,8 +41,8 @@ typedef enum {
 
 struct grp_state {
   mld_grp_state_t state;
-	struct in6_addr addr;
-	unsigned short timeout;
+  struct in6_addr addr;
+  unsigned short timeout;
 };
 
 
@@ -54,9 +54,9 @@ typedef enum {
 
 struct mld_rtr_state {
   struct thread * thread;
-	struct in6_addr querier;
-	struct in6_addr self_addr;
-	struct list * grps; 
+  struct in6_addr querier;
+  struct in6_addr self_addr;
+  struct list * grps; 
   /* querier state: general query timeout
    * non-querier state: other querier present timer
    */
@@ -98,19 +98,19 @@ void mld_rtr_state_transition(struct mld_rtr_state * st, mld_rtr_event_t event);
 
 bool mld_rtr_is_querier(struct mld_rtr_state * st)
 {
-	return IN6_ARE_ADDR_EQUAL(&st->self_addr, &st->querier);
+  return IN6_ARE_ADDR_EQUAL(&st->self_addr, &st->querier);
 }
 
 void init_mld_rtr_state(struct mld_rtr_state * st, struct in6_addr * own_addr)
 {
-	memset(st, 0, sizeof(st));
+  memset(st, 0, sizeof(st));
   /* router always starts by assuming it is the querier */
-	st->querier = st->self_addr = *own_addr;
-	st->grps = list_new();
+  st->querier = st->self_addr = *own_addr;
+  st->grps = list_new();
 
   if (st->grps == NULL) {
     fprintf(stderr, "List allocation for grps failed");
-		abort();
+    abort();
   }
 
   st->timeout = MLD_STARTUP_QRY_INT;
@@ -166,7 +166,7 @@ void mld_rtr_state_transition(struct mld_rtr_state * st, mld_rtr_event_t event)
         mld_rtr_send_general_query(st);
         break;
       case MLD_RTR_EVENT_QRY_LOWER:
-      	st->timeout = MLD_OTH_QRY_INT;
+        st->timeout = MLD_OTH_QRY_INT;
         /* TODO: restart timer, set querier IP? */
         printf("Is this right? This is not supposed to happen\n");
         break;
