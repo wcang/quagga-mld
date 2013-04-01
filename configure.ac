@@ -1694,6 +1694,7 @@ AC_CONFIG_FILES([Makefile lib/Makefile zebra/Makefile ripd/Makefile
           doc/Makefile ospfclient/Makefile tests/Makefile m4/Makefile
           redhat/Makefile
 	  pkgsrc/Makefile
+	  mld/Makefile
 	  redhat/quagga.spec 
 	  lib/version.h
 	  doc/defines.texi
