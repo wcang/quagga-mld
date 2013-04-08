@@ -8,6 +8,8 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "mld.h"
+#include <sys/types.h>
+#include <sys/socket.h>
 
 
 struct mld_rtr_state querier, non_querier;
@@ -16,11 +18,10 @@ struct thread_master *master;
 
 bool mld_rtr_is_querier(struct mld_rtr_state * st);
 
-static int mld_rtr_general_qry_expired(struct thread * thread);
 
 void init_mld_rtr_state(struct mld_rtr_state * st, struct in6_addr * own_addr);
 
-static void mld_rtr_reschedule_query(struct mld_rtr_state * st);
+void mld_rtr_reschedule_query(struct mld_rtr_state * st);
 
 static void mld_rtr_send_general_query(struct mld_rtr_state * st);
 
@@ -62,7 +63,7 @@ void init_mld_rtr_state(struct mld_rtr_state * st, struct in6_addr * own_addr)
 }
 
 
-static void mld_rtr_reschedule_query(struct mld_rtr_state * st)
+void mld_rtr_reschedule_query(struct mld_rtr_state * st)
 {
   printf("Reschedule general query for timeout in %lu\n", st->timeout);
   st->thread = thread_add_timer_msec(master, mld_rtr_general_qry_expired,
@@ -140,7 +141,7 @@ void mld_rtr_state_transition(struct mld_rtr_state * st, mld_rtr_event_t event)
 }
 
 
-static int mld_rtr_general_qry_expired(struct thread * thread)
+int mld_rtr_general_qry_expired(struct thread * thread)
 {
   struct mld_rtr_state * mld = THREAD_ARG(thread);
 
@@ -148,7 +149,7 @@ static int mld_rtr_general_qry_expired(struct thread * thread)
   return 0; 
 }
 
-
+/*
 
 static void init_rtr_event(void)
 {
@@ -162,7 +163,7 @@ static void init_rtr_event(void)
   non_querier.thread = thread_add_timer_msec(master, mld_rtr_general_qry_expired,
       &non_querier, non_querier.timeout);
 }
-
+*/
 /* generate router event */
 void generate_rtr_event(void)
 {
@@ -176,7 +177,7 @@ int main(int argc, char * argv[])
 
   if_init();  
   master = thread_master_create();
-  init_rtr_event();
+//  init_rtr_event();
   mld_zebra_init();
 
   /* Start finite state machine, here we go! */

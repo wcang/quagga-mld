@@ -2,6 +2,7 @@
 #include "thread.h"
 #include "linklist.h"
 #include <netinet/in.h>
+#include "if.h"
 
 /* timer value is specified in milliseconds */
 #define MLD_ROBUSTNESS              2
@@ -47,6 +48,7 @@ typedef enum {
 struct mld_rtr_state {
   /* thread to keep track of timeout */
   struct thread * thread;
+  struct interface * iface;
   struct in6_addr querier;
   struct in6_addr self_addr;
   struct list * grps; 
@@ -71,3 +73,10 @@ struct mld_header
   u_int16_t reserved;
   struct in6_addr address;
 };
+
+extern struct thread_master * master;
+
+
+void mld_rtr_reschedule_query(struct mld_rtr_state * st);
+
+int mld_rtr_general_qry_expired(struct thread * thread);

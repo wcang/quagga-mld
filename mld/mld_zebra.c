@@ -4,6 +4,7 @@
 #include <zebra.h>
 #include "zclient.h"
 #include "if.h"
+#include "mld.h"
 
 /* information about zebra. */
 struct zclient *zclient = NULL;
@@ -16,11 +17,18 @@ static int
 mld_zebra_if_add (int command, struct zclient *zclient, zebra_size_t length)
 {
   struct interface * ifp;
+  struct mld_rtr_state * mld;
 
   ifp = zebra_interface_add_read (zclient->ibuf);
   printf("Zebra Interface add: %s index %d\n",
 		ifp->name, ifp->ifindex);
-  
+
+  if (!strcmp(ifp->name, "eth1")) {
+    mld = malloc(sizeof(*mld));
+    ifp->info = mld;
+    mld->iface = ifp;
+  }
+       
   if (if_is_up(ifp)) {
     printf("Interface %s is up\n", ifp->name);
   }
@@ -70,6 +78,7 @@ mld_zebra_if_address_update_add (int command, struct zclient *zclient,
 {
   struct connected *c;
   char buf[128];
+  struct mld_rtr_state * mld;
 
   c = zebra_interface_address_read (ZEBRA_INTERFACE_ADDRESS_ADD, zclient->ibuf);
   if (c == NULL)
@@ -79,10 +88,18 @@ mld_zebra_if_address_update_add (int command, struct zclient *zclient,
   c->ifp->name, prefix_family_str (c->address),
   inet_ntop (c->address->family, &c->address->u.prefix,
        buf, sizeof (buf)), c->address->prefixlen);
-/*
-  if (c->address->family == AF_INET6)
-    pim6_interface_connected_update(c->ifp);
-*/
+
+  if (c->ifp->info && c->address->family == AF_INET6) {
+    if (IN6_IS_ADDR_LINKLOCAL(&c->address->u.prefix6)) {
+      mld = c->ifp->info;
+      init_mld_rtr_state(mld, &c->address->u.prefix6);
+      mld_rtr_reschedule_query(mld);
+      mld->thread = thread_add_timer_msec(master, mld_rtr_general_qry_expired,
+      mld, mld->timeout);
+
+    }
+  }
+  
   return 0;
 }
 
