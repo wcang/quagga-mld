@@ -45,6 +45,7 @@ typedef enum {
 } mld_rtr_event_t;
 
 struct mld_rtr_state {
+  /* thread to keep track of timeout */
   struct thread * thread;
   struct in6_addr querier;
   struct in6_addr self_addr;
@@ -57,4 +58,16 @@ struct mld_rtr_state {
   unsigned char counter;
 };
 
+#define MLD_TYPE_QUERY  130
+#define MLD_TYPE_REPORT 131
+#define MLD_TYPE_DONE   132
 
+struct mld_header
+{
+  u_char type;
+  u_char code;
+  u_int16_t checksum;
+  u_int16_t max_delay;
+  u_int16_t reserved;
+  struct in6_addr address;
+};

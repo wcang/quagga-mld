@@ -6,6 +6,7 @@
 #include <string.h>
 #include <stdlib.h>
 #include <arpa/inet.h>
+#include <unistd.h>
 #include "mld.h"
 
 
@@ -71,7 +72,14 @@ static void mld_rtr_reschedule_query(struct mld_rtr_state * st)
 
 static void mld_rtr_send_general_query(struct mld_rtr_state * st)
 {
-  printf("Sending fake general query from %s\n", addr2ascii(&st->self_addr)); 
+  struct mld_header hdr;
+
+  memset(&hdr, 0, sizeof(hdr));
+  hdr.type = MLD_TYPE_QUERY;
+  hdr.max_delay = MLD_QRY_RESP_INT;
+  /* TODO: send message */
+  printf("Sending fake general query from %s\n", addr2ascii(&st->self_addr));
+
   mld_rtr_reschedule_query(st); 
 }
 
@@ -141,6 +149,7 @@ static int mld_rtr_general_qry_expired(struct thread * thread)
 }
 
 
+
 static void init_rtr_event(void)
 {
   struct in6_addr addr;
@@ -164,9 +173,11 @@ void generate_rtr_event(void)
 int main(int argc, char * argv[])
 {
   struct thread thread;
-  
+
+  if_init();  
   master = thread_master_create();
   init_rtr_event();
+  mld_zebra_init();
 
   /* Start finite state machine, here we go! */
   while (thread_fetch(master, &thread))
