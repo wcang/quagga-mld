@@ -8,11 +8,11 @@ start() {
 	ifconfig tap_mld1 up
 	ifconfig tap_mld2 up
 	virsh start mld1
-#	virsh start mld2
+	virsh start mld2
 }
 
 stop() {
-#	virsh shutdown mld2
+	virsh shutdown mld2
 	virsh shutdown mld1
 	tunctl -d tap_mld1
 	tunctl -d tap_mld2
