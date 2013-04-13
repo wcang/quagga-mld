@@ -3,6 +3,7 @@
 #include "linklist.h"
 #include <netinet/in.h>
 #include "if.h"
+#include <stdbool.h>
 
 /* timer value is specified in milliseconds */
 #define MLD_ROBUSTNESS              2
@@ -47,9 +48,10 @@ typedef enum {
 
 struct mld_rtr_state {
   /* thread to keep track of timeout */
+  bool querier;
   struct thread * thread;
   struct interface * iface;
-  struct in6_addr querier;
+  struct in6_addr querier_addr;
   struct in6_addr self_addr;
   struct list * grps; 
   /* querier state: general query timeout
