@@ -74,12 +74,8 @@ int icmp6_send(int sockfd, int oif_index, struct in6_addr * src,
 }
 
 
-/* msg_len should be the raw size of the msg buffer itself when passed in,
- * msg_len will contain the the size of actual data stored within msg
- * when the function returns
- */
 int icmp6_recv(int sockfd, int * iif_index, struct in6_addr * src, 
-    struct in6_addr * dest, unsigned char * msg, unsigned int * msg_len)
+    struct in6_addr * dest, unsigned char * msg, unsigned int msg_len)
 {
   int ret;
   struct iovec iov;
@@ -96,7 +92,7 @@ int icmp6_recv(int sockfd, int * iif_index, struct in6_addr * src,
   hdr.msg_namelen = sizeof(sin6);
   /* the data itself */
   iov.iov_base = msg; 
-  iov.iov_len = *msg_len;
+  iov.iov_len = msg_len;
   hdr.msg_iov = &iov;
   hdr.msg_iovlen = 1;
   /* control message to control output interface and src address to be used */
@@ -107,7 +103,7 @@ int icmp6_recv(int sockfd, int * iif_index, struct in6_addr * src,
   hdr.msg_control = cmsghdr;
   hdr.msg_controllen = sizeof(cmsghdr);
 
-  if ((ret =  recvmsg(sockfd, &hdr, 0))) {
+  if ((ret =  recvmsg(sockfd, &hdr, 0)) == -1) {
     printf("Error in receiving message: %s\n", strerror(errno));
     return ret;
   }
@@ -123,11 +119,9 @@ int icmp6_recv(int sockfd, int * iif_index, struct in6_addr * src,
     memcpy(dest, &pkt_info->ipi6_addr, sizeof(*src));
   }
 
-  /* get the data length */
-  *msg_len = iov.iov_len;
   /* extract source address */
   if (src)
     memcpy(src, &sin6.sin6_addr, sizeof(*src));
 
-  return 0;
+  return ret;
 }
