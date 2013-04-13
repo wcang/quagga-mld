@@ -93,10 +93,7 @@ mld_zebra_if_address_update_add (int command, struct zclient *zclient,
     if (IN6_IS_ADDR_LINKLOCAL(&c->address->u.prefix6)) {
       mld = c->ifp->info;
       init_mld_rtr_state(mld, &c->address->u.prefix6);
-      mld_rtr_reschedule_query(mld);
-      mld->thread = thread_add_timer_msec(master, mld_rtr_general_qry_expired,
-      mld, mld->timeout);
-
+      mld_rtr_send_general_query(mld);
     }
   }
   

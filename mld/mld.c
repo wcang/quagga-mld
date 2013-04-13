@@ -21,9 +21,9 @@ bool mld_rtr_is_querier(struct mld_rtr_state * st);
 
 void init_mld_rtr_state(struct mld_rtr_state * st, struct in6_addr * own_addr);
 
-void mld_rtr_reschedule_query(struct mld_rtr_state * st);
+static void mld_rtr_reschedule_query(struct mld_rtr_state * st);
 
-static void mld_rtr_send_general_query(struct mld_rtr_state * st);
+void mld_rtr_send_general_query(struct mld_rtr_state * st);
 
 static int mld_rtr_other_querier_timeout(struct thread * thread);
 
@@ -63,7 +63,7 @@ void init_mld_rtr_state(struct mld_rtr_state * st, struct in6_addr * own_addr)
 }
 
 
-void mld_rtr_reschedule_query(struct mld_rtr_state * st)
+static void mld_rtr_reschedule_query(struct mld_rtr_state * st)
 {
   printf("Reschedule general query for timeout in %lu\n", st->timeout);
   st->thread = thread_add_timer_msec(master, mld_rtr_general_qry_expired,
@@ -71,7 +71,7 @@ void mld_rtr_reschedule_query(struct mld_rtr_state * st)
 }
 
 
-static void mld_rtr_send_general_query(struct mld_rtr_state * st)
+void mld_rtr_send_general_query(struct mld_rtr_state * st)
 {
   struct mld_header hdr;
 
