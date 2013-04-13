@@ -23,7 +23,7 @@ int icmp6_sock_init()
   ICMP6_FILTER_SETBLOCK(MLD_TYPE_QUERY, &filter);
   ICMP6_FILTER_SETBLOCK(MLD_TYPE_REPORT, &filter);
 
-  if (setsockopt(sockfd, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(filter)) == 0) {
+  if (setsockopt(sockfd, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(filter)) != 0) {
     printf("Failed to set ICMP filter: %s\n", strerror(errno));
     exit(1);
   }
