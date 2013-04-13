@@ -76,7 +76,8 @@ struct mld_header
 
 extern struct thread_master * master;
 
+extern int icmp6_sockfd;
 
-void mld_rtr_reschedule_query(struct mld_rtr_state * st);
+void mld_rtr_send_general_query(struct mld_rtr_state * st);
 
 int mld_rtr_general_qry_expired(struct thread * thread);

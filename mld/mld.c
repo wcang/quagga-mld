@@ -8,6 +8,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include "mld.h"
+#include "mld_sock.h"
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -16,14 +17,13 @@ struct mld_rtr_state querier, non_querier;
 
 struct thread_master *master;
 
-bool mld_rtr_is_querier(struct mld_rtr_state * st);
+int icmp6_sockfd;
 
+bool mld_rtr_is_querier(struct mld_rtr_state * st);
 
 void init_mld_rtr_state(struct mld_rtr_state * st, struct in6_addr * own_addr);
 
 static void mld_rtr_reschedule_query(struct mld_rtr_state * st);
-
-void mld_rtr_send_general_query(struct mld_rtr_state * st);
 
 static int mld_rtr_other_querier_timeout(struct thread * thread);
 
@@ -73,13 +73,24 @@ static void mld_rtr_reschedule_query(struct mld_rtr_state * st)
 
 void mld_rtr_send_general_query(struct mld_rtr_state * st)
 {
+  int ret;
   struct mld_header hdr;
+  struct interface * ifp;
+  struct in6_addr dest;
 
   memset(&hdr, 0, sizeof(hdr));
   hdr.type = MLD_TYPE_QUERY;
   hdr.max_delay = MLD_QRY_RESP_INT;
   /* TODO: send message */
   printf("Sending fake general query from %s\n", addr2ascii(&st->self_addr));
+  ifp = st->iface;
+  inet_pton(AF_INET6, "ff02::1", &dest);
+  ret = icmp6_send(icmp6_sockfd, ifp->ifindex, &st->self_addr, 
+      &dest, &hdr, sizeof(hdr));
+
+  if (ret) {
+    printf("error sending general query: %s\n", strerror(errno));
+  }
 
   mld_rtr_reschedule_query(st); 
 }
@@ -149,21 +160,6 @@ int mld_rtr_general_qry_expired(struct thread * thread)
   return 0; 
 }
 
-/*
-
-static void init_rtr_event(void)
-{
-  struct in6_addr addr;
-  inet_pton(AF_INET6, "fe80::21c:c0ff:fe11:1111", &addr);
-  init_mld_rtr_state(&querier, &addr);
-  inet_pton(AF_INET6, "fe80::21c:c0ff:fe22:2222", &addr);
-  init_mld_rtr_state(&non_querier, &addr);
-
-  mld_rtr_reschedule_query(&non_querier);
-  non_querier.thread = thread_add_timer_msec(master, mld_rtr_general_qry_expired,
-      &non_querier, non_querier.timeout);
-}
-*/
 /* generate router event */
 void generate_rtr_event(void)
 {
@@ -177,7 +173,7 @@ int main(int argc, char * argv[])
 
   if_init();  
   master = thread_master_create();
-//  init_rtr_event();
+  icmp6_sockfd = icmp6_sock_init(); 
   mld_zebra_init();
 
   /* Start finite state machine, here we go! */

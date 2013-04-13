@@ -1,6 +1,6 @@
 #include <netinet/in.h>
 
-int icmp6_sock();
+int icmp6_sock_init();
 
 int icmp6_send(int sockfd, int oif_index, struct in6_addr * src, 
     struct in6_addr * dest, unsigned char * msg, unsigned int msg_len);

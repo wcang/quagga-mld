@@ -23,7 +23,7 @@ mld_zebra_if_add (int command, struct zclient *zclient, zebra_size_t length)
   printf("Zebra Interface add: %s index %d\n",
 		ifp->name, ifp->ifindex);
 
-  if (!strcmp(ifp->name, "eth1")) {
+  if (!ifp->info) {
     mld = malloc(sizeof(*mld));
     ifp->info = mld;
     mld->iface = ifp;

@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <sys/uio.h>
 
-int icmp6_sock()
+int icmp6_sock_init()
 {
   int sockfd;
   struct icmp6_filter filter;
