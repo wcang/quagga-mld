@@ -80,14 +80,14 @@ void mld_rtr_send_general_query(struct mld_rtr_state * st)
 
   memset(&hdr, 0, sizeof(hdr));
   hdr.type = MLD_TYPE_QUERY;
-  hdr.max_delay = MLD_QRY_RESP_INT;
-  printf("Sending fake general query from %s\n", addr2ascii(&st->self_addr));
+  hdr.max_delay = htons(MLD_QRY_RESP_INT);
+  printf("Sending general query from %s\n", addr2ascii(&st->self_addr));
   ifp = st->iface;
   inet_pton(AF_INET6, "ff02::1", &dest);
   ret = icmp6_send(icmp6_sockfd, ifp->ifindex, &st->self_addr, 
       &dest, &hdr, sizeof(hdr));
 
-  if (ret) {
+  if (ret != sizeof(hdr)) {
     printf("error sending general query: %s\n", strerror(errno));
   }
 
