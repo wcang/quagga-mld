@@ -37,13 +37,16 @@ static char * addr2ascii(struct in6_addr * addr)
   return buffer;
 }
 
+static int mld_rtr_icmpv6_rcv(struct thread * thread);
 
-void mld_rtr_state_transition(struct mld_rtr_state * st, mld_rtr_event_t event);
-
+static void mld_rtr_state_transition(struct mld_rtr_state * st, mld_rtr_event_t event);
 
 void init_mld_rtr_state(struct mld_rtr_state * st, struct in6_addr * own_addr)
 {
+  struct interface * ifp = st->iface;
+  
   memset(st, 0, sizeof(st));
+  st->iface = ifp;
   /* router always starts by assuming it is the querier */
   st->querier = true;
   st->self_addr = *own_addr;
@@ -62,7 +65,7 @@ void init_mld_rtr_state(struct mld_rtr_state * st, struct in6_addr * own_addr)
 static void mld_rtr_reschedule_query(struct mld_rtr_state * st)
 {
   printf("Reschedule general query for timeout in %lu\n", st->timeout);
-  st->thread = thread_add_timer_msec(master, mld_rtr_general_qry_expired,
+  st->thr_timeout = thread_add_timer_msec(master, mld_rtr_general_qry_expired,
       st, st->timeout);
 }
 
@@ -102,13 +105,13 @@ static int mld_rtr_other_querier_timeout(struct thread * thread)
 
 static void mld_rtr_reschedule_other_querier_timeout(struct mld_rtr_state * st)
 {
-  thread_cancel(st->thread);
+  thread_cancel(st->thr_timeout);
   st->timeout = MLD_OTH_QRY_INT;
-  st->thread = thread_add_timer_msec(master, mld_rtr_other_querier_timeout,
+  st->thr_timeout = thread_add_timer_msec(master, mld_rtr_other_querier_timeout,
       st, st->timeout);
 }
 
-void mld_rtr_state_transition(struct mld_rtr_state * st, mld_rtr_event_t event)
+static void mld_rtr_state_transition(struct mld_rtr_state * st, mld_rtr_event_t event)
 {
   if (st->querier) {
     switch (event) {
@@ -164,6 +167,7 @@ mld_process_icmpv6_rcv(struct mld_rtr_state * mld, struct in6_addr * src,
 
   switch (hdr->type) {
     case MLD_TYPE_QUERY:
+      printf("Received MLD query\n");
       /* check if other router has lower IP than us, reschedule for query timeout */
       if (IPV6_ADDR_CMP(src, dest) < 0) {
         mld->querier_addr = *src;
@@ -181,7 +185,7 @@ mld_process_icmpv6_rcv(struct mld_rtr_state * mld, struct in6_addr * src,
       }
       break;
     default:
-      printf("Something gone wrong. Perhaps, ICMPv6 filter is not installed correctly");
+      printf("Something gone wrong. Perhaps, ICMPv6 filter is not installed correctly\n");
       break;
   } 
 }
@@ -194,6 +198,7 @@ int mld_rtr_icmpv6_rcv(struct thread * thread)
   struct in6_addr src, dest;
   struct interface * ifp;
   unsigned char msg[1500];
+  printf("In %s\n", __FUNCTION__);
 
   ret = icmp6_recv(icmp6_sockfd, &ifindex, &src, &dest, msg, sizeof(msg));
 

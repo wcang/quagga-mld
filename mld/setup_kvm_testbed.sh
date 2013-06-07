@@ -9,6 +9,7 @@ start() {
 	ifconfig tap_mld2 up
 	virsh start mld1
 	virsh start mld2
+	su -c "echo 0 > /sys/class/net/virbr0/bridge/multicast_snooping"
 }
 
 stop() {

@@ -5,6 +5,7 @@
 #include "mld_sock.h"
 #include <stdlib.h>
 #include <sys/uio.h>
+#include "sockopt.h"
 
 int icmp6_sock_init()
 {
@@ -18,15 +19,31 @@ int icmp6_sock_init()
     exit(1);
   }
 
-  ICMP6_FILTER_SETBLOCKALL(&filter);
-  ICMP6_FILTER_SETBLOCK(MLD_TYPE_DONE, &filter);
-  ICMP6_FILTER_SETBLOCK(MLD_TYPE_QUERY, &filter);
-  ICMP6_FILTER_SETBLOCK(MLD_TYPE_REPORT, &filter);
+  if (setsockopt_ipv6_pktinfo(sockfd, 1)) {
+    printf("Failed to enable ipv6 pktinfo on ICMP6 socket: %s\n", strerror(errno));
+    exit(1);
+  }
 
+  if (setsockopt_ipv6_multicast_loop(sockfd, 0)) {
+    printf("Failed to disable multicast loopback on ICMP6 socket: %s\n", strerror(errno));
+    exit(1);
+  }
+
+  if (setsockopt_ipv6_hoplimit(sockfd, 1)) {
+    printf("Failed to set hop limit to 1 on ICMP6 socket: %s\n", strerror(errno));
+    exit(1);
+  }
+
+  ICMP6_FILTER_SETBLOCKALL(&filter);
+  ICMP6_FILTER_SETPASS(MLD_TYPE_DONE, &filter);
+  ICMP6_FILTER_SETPASS(MLD_TYPE_QUERY, &filter);
+  ICMP6_FILTER_SETPASS(MLD_TYPE_REPORT, &filter);
+  
   if (setsockopt(sockfd, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(filter)) != 0) {
     printf("Failed to set ICMP filter: %s\n", strerror(errno));
     exit(1);
   }
+
 
   return sockfd;
 }

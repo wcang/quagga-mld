@@ -47,9 +47,9 @@ typedef enum {
 } mld_rtr_event_t;
 
 struct mld_rtr_state {
-  /* thread to keep track of timeout */
   bool querier;
-  struct thread * thread;
+  /* thread to keep track of timeout */
+  struct thread * thr_timeout;
   struct interface * iface;
   struct in6_addr querier_addr;
   struct in6_addr self_addr;
