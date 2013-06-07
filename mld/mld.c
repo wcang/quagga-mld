@@ -169,7 +169,7 @@ mld_process_icmpv6_rcv(struct mld_rtr_state * mld, struct in6_addr * src,
     case MLD_TYPE_QUERY:
       printf("Received MLD query\n");
       /* check if other router has lower IP than us, reschedule for query timeout */
-      if (IPV6_ADDR_CMP(src, dest) < 0) {
+      if (IPV6_ADDR_CMP(src, &mld->self_addr) < 0) {
         mld->querier_addr = *src;
         mld_rtr_state_transition(mld, MLD_RTR_EVENT_QRY_LOWER);
       }
@@ -198,7 +198,6 @@ int mld_rtr_icmpv6_rcv(struct thread * thread)
   struct in6_addr src, dest;
   struct interface * ifp;
   unsigned char msg[1500];
-  printf("In %s\n", __FUNCTION__);
 
   ret = icmp6_recv(icmp6_sockfd, &ifindex, &src, &dest, msg, sizeof(msg));
 
@@ -216,6 +215,7 @@ int mld_rtr_icmpv6_rcv(struct thread * thread)
   }
 
   thread_recv = thread_add_read(master, mld_rtr_icmpv6_rcv, NULL, icmp6_sockfd);  
+  return 0;
 }
 
 
